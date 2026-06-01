@@ -1,0 +1,16 @@
+snowflake:
+  warehouse: NYC_TAXI_WH
+  database: NYC_TAXI_DB
+  schema: RAW
+
+ingestion:
+  base_url: https://d37ci6vzurychx.cloudfront.net/trip-data
+  table_name: YELLOW_TAXI_TRIPS
+  timeout: 300
+  technical_columns:
+    - _source_file
+    - _ingestion_date
+  annees:
+    - 2024
+    - 2025
+    - 2026
