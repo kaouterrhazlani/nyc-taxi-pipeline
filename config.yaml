@@ -7,6 +7,9 @@ ingestion:
   base_url: https://d37ci6vzurychx.cloudfront.net/trip-data
   table_name: YELLOW_TAXI_TRIPS
   timeout: 300
+  technical_columns:
+    - _source_file
+    - _ingestion_date
   fichiers:
     - yellow_tripdata_2024-01.parquet
     - yellow_tripdata_2024-02.parquet

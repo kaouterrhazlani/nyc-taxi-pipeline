@@ -58,6 +58,10 @@ for fichier in ing["fichiers"]:
 
         df = pd.read_parquet(io.BytesIO(resp.content))
         print(f"  {len(df):,} lignes lues")
+        
+        #colonnes techniques ( nom de fichier source + date d'ingestion)
+        df[ing["technical_columns"]["source_file_col"]] = fichier
+        df[ing["technical_columns"]["ingestion_date_col"]] = pd.Timestamp.now()
 
         if table_exists:
             add_missing_columns(conn, ing["table_name"], df)
