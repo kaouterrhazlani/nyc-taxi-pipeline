@@ -1,0 +1,66 @@
+name: NYC Taxi Pipeline CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  lint:
+    name: Lint & Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install flake8 sqlfluff
+
+      - name: Lint Python
+        run: flake8 ingestion/ --max-line-length=120 --ignore=E501
+
+      - name: Lint SQL
+        run: sqlfluff lint sql/ --dialect snowflake
+        continue-on-error: true
+
+  dbt:
+    name: DBT Run & Test
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install DBT
+        run: pip install dbt-snowflake
+
+      - name: DBT debug
+        working-directory: dbt
+        run: dbt debug
+
+      - name: DBT run
+        working-directory: dbt
+        run: dbt run
+
+      - name: DBT test
+        working-directory: dbt
+        run: dbt test
