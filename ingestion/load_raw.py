@@ -15,6 +15,7 @@ with open("config.yaml", "r") as f:
 
 sf = config["snowflake"]
 ing = config["ingestion"]
+tech_cols = ing.get("technical_columns", [])
 
 conn = snowflake.connector.connect(
     account=os.getenv("SNOWFLAKE_ACCOUNT"),
@@ -44,24 +45,35 @@ def add_missing_columns(conn, table_name, df):
         return
     cur = conn.cursor()
     for col in df.columns:
-        if col not in existing:
+        if col not in existing and col not in tech_cols:
             print(f"  nouvelle colonne détectée : {col}")
             cur.execute(f'ALTER TABLE {sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT')
 
 
-for fichier in ing["fichiers"]:
+# génération dynamique des fichiers depuis les années
+fichiers = []
+for annee in ing["annees"]:
+    for mois in range(1, 13):
+        fichiers.append(f"yellow_tripdata_{annee}-{str(mois).zfill(2)}.parquet")
+
+for fichier in fichiers:
     print(f"\n{fichier}")
     try:
         url = f"{ing['base_url']}/{fichier}"
         resp = requests.get(url, timeout=ing["timeout"])
+
+        # si fichier non disponible on passe au suivant
+        if resp.status_code == 404:
+            print(f"  non disponible — ignoré")
+            continue
         resp.raise_for_status()
 
         df = pd.read_parquet(io.BytesIO(resp.content))
         print(f"  {len(df):,} lignes lues")
-        
-        #colonnes techniques ( nom de fichier source + date d'ingestion)
-        df[ing["technical_columns"]["source_file_col"]] = fichier
-        df[ing["technical_columns"]["ingestion_date_col"]] = pd.Timestamp.now()
+
+        # colonnes techniques
+        df[tech_cols[0]] = fichier
+        df[tech_cols[1]] = pd.Timestamp.now()
 
         if table_exists:
             add_missing_columns(conn, ing["table_name"], df)
