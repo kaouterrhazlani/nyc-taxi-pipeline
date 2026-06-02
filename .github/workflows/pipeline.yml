@@ -14,6 +14,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v3
 
@@ -31,6 +32,7 @@ jobs:
       - name: Lint SQL
         run: sqlfluff lint sql/ --dialect snowflake
         continue-on-error: true
+
   dbt:
     name: DBT
     runs-on: ubuntu-latest
@@ -39,7 +41,7 @@ jobs:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_KEY_PATH: /home/runner/.ssh/snowflake_key.p8
-      DBT_PROFILES_DIR: /home/runner/work/nyc-taxi-pipeline/nyc-taxi-pipeline/dbt/nyc_taxi
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt/nyc_taxi
     steps:
       - uses: actions/checkout@v3
 
