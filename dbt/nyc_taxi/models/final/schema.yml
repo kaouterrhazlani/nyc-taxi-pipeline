@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: daily_summary
+    description: "Résumé journalier des trajets NYC Taxi"
+    columns:
+      - name: pickup_date
+        description: "Date de prise en charge"
+        tests:
+          - not_null
+          - unique
+      - name: total_trips
+        description: "Nombre total de trajets"
+        tests:
+          - not_null
+      - name: total_revenue
+        description: "Revenu total en dollars"
+        tests:
+          - not_null
+
+  - name: zone_analysis
+    description: "Analyse des trajets par zone de prise en charge"
+    columns:
+      - name: pickup_location_id
+        description: "Identifiant de zone"
+        tests:
+          - not_null
+          - unique
+      - name: total_pickups
+        description: "Nombre total de prises en charge"
+        tests:
+          - not_null
+
+  - name: hourly_patterns
+    description: "Patterns horaires des trajets NYC Taxi"
+    columns:
+      - name: pickup_hour
+        description: "Heure de prise en charge (0-23)"
+        tests:
+          - not_null
+      - name: pickup_dow
+        description: "Jour de la semaine (1-7)"
+        tests:
+          - not_null
+      - name: total_trips
+        description: "Nombre total de trajets"
+        tests:
+          - not_null
