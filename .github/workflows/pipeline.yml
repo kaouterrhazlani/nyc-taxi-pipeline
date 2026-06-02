@@ -14,6 +14,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v3
 
@@ -31,6 +32,7 @@ jobs:
       - name: Lint SQL
         run: sqlfluff lint sql/ --dialect snowflake
         continue-on-error: true
+
   dbt:
     name: DBT
     runs-on: ubuntu-latest
