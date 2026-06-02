@@ -53,10 +53,10 @@ jobs:
 
       - name: Setup private key
         env:
-          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SNOWFLAKE_PRIVATE_KEY" > ~/.ssh/snowflake_key.p8
+          echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/snowflake_key.p8
           chmod 600 ~/.ssh/snowflake_key.p8
 
       - name: DBT run
