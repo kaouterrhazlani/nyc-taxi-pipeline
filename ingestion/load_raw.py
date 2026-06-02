@@ -64,7 +64,7 @@ for fichier in fichiers:
 
         # si fichier non disponible on passe au suivant
         if resp.status_code == 404:
-            print(f"  non disponible — ignoré")
+            print("  non disponible — ignoré")
             continue
         resp.raise_for_status()
 
