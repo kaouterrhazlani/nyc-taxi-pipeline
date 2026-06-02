@@ -31,11 +31,15 @@ jobs:
       - name: Lint SQL
         run: sqlfluff lint sql/ --dialect snowflake
         continue-on-error: true
-
   dbt:
     name: DBT
     runs-on: ubuntu-latest
     needs: lint
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_KEY_PATH: /home/runner/.ssh/snowflake_key.p8
+      DBT_PROFILES_DIR: dbt/nyc_taxi
     steps:
       - uses: actions/checkout@v3
 
@@ -54,26 +58,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SNOWFLAKE_PRIVATE_KEY" > ~/.ssh/snowflake_key.p8
           chmod 600 ~/.ssh/snowflake_key.p8
-
-      - name: Create profiles.yml
-        run: |
-          mkdir -p ~/.dbt
-          cat > ~/.dbt/profiles.yml << 'EOF'
-          nyc_taxi:
-            target: dev
-            outputs:
-              dev:
-                type: snowflake
-                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-                user: ${{ secrets.SNOWFLAKE_USER }}
-                role: ACCOUNTADMIN
-                warehouse: NYC_TAXI_WH
-                database: NYC_TAXI_DB
-                schema: STAGING
-                threads: 4
-                private_key_path: /home/runner/.ssh/snowflake_key.p8
-                authenticator: snowflake_jwt
-          EOF
 
       - name: DBT run
         working-directory: dbt/nyc_taxi
