@@ -31,6 +31,7 @@ jobs:
       - name: Lint SQL
         run: sqlfluff lint sql/ --dialect snowflake
         continue-on-error: true
+
   dbt:
     name: DBT
     runs-on: ubuntu-latest
@@ -47,9 +48,11 @@ jobs:
         run: pip install dbt-snowflake
 
       - name: Setup private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > ~/.ssh/snowflake_key.p8
+          echo "$SNOWFLAKE_PRIVATE_KEY" > ~/.ssh/snowflake_key.p8
           chmod 600 ~/.ssh/snowflake_key.p8
 
       - name: Create profiles.yml
@@ -79,7 +82,6 @@ jobs:
       - name: DBT test
         working-directory: dbt/nyc_taxi
         run: dbt test
-
 
   release:
     name: Release
