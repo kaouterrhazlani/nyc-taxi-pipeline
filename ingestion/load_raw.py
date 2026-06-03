@@ -27,6 +27,12 @@ conn = snowflake.connector.connect(
 )
 print("connecté à snowflake")
 
+if ing.get("truncate_before_load", False):
+    cur = conn.cursor()
+    cur.execute(f"TRUNCATE TABLE IF EXISTS {sf['schema']}.{ing['table_name']}")
+    print("table vidée")
+    cur.close()
+
 table_exists = False
 
 
@@ -47,14 +53,16 @@ def add_missing_columns(conn, table_name, df):
     for col in df.columns:
         if col not in existing and col not in tech_cols:
             print(f"  nouvelle colonne détectée : {col}")
-            cur.execute(f'ALTER TABLE {sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT')
+            cur.execute(
+                f'ALTER TABLE {sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT'
+            )
 
 
-# génération dynamique des fichiers depuis les années
 fichiers = []
 for annee in ing["annees"]:
     for mois in range(1, 13):
-        fichiers.append(f"yellow_tripdata_{annee}-{str(mois).zfill(2)}.parquet")
+        fichiers.append(
+            f"yellow_tripdata_{annee}-{str(mois).zfill(2)}.parquet")
 
 for fichier in fichiers:
     print(f"\n{fichier}")
@@ -62,7 +70,6 @@ for fichier in fichiers:
         url = f"{ing['base_url']}/{fichier}"
         resp = requests.get(url, timeout=ing["timeout"])
 
-        # si fichier non disponible on passe au suivant
         if resp.status_code == 404:
             print("  non disponible — ignoré")
             continue
@@ -71,7 +78,6 @@ for fichier in fichiers:
         df = pd.read_parquet(io.BytesIO(resp.content))
         print(f"  {len(df):,} lignes lues")
 
-        # colonnes techniques
         df[tech_cols[0]] = fichier
         df[tech_cols[1]] = pd.Timestamp.now()
 

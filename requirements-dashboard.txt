@@ -1,0 +1,7 @@
+# Dépendances du dashboard Streamlit.
+# Installation : uv pip install -r requirements-dashboard.txt
+# Lancement    : streamlit run dashboard/app.py
+streamlit==1.40.2
+snowflake-connector-python[pandas]==3.18.0
+pandas==2.2.3
+python-dotenv==1.0.1
