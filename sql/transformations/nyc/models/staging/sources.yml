@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: nyc_taxi
+    database: NY_TAXIS            
+    schema: PUBLIC           
+    tables:
+      - name: nyc_taxi_yellow  
