@@ -66,7 +66,7 @@ WHERE
     AND "trip_distance" > 0
     AND "trip_distance" < 50
     AND "passenger_count" > 0
-    AND "passenger_count" <= 6
+    AND "passenger_count" <= 5
     AND "tip_amount" / "fare_amount" <= 1
     AND TO_TIMESTAMP("tpep_pickup_datetime" / 1000000) >= '2024-01-01'
     AND TO_TIMESTAMP("tpep_pickup_datetime" / 1000000) < '2027-01-01'
