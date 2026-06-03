@@ -1,0 +1,116 @@
+version: 2
+
+models:
+  - name: daily_summary
+    description: "Résumé journalier des trajets NYC Taxi"
+    columns:
+      - name: pickup_date
+        description: "Date de prise en charge"
+        tests:
+          - not_null
+          - unique
+      - name: total_trips
+        description: "Nombre total de trajets"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 1
+      - name: total_revenue
+        description: "Revenu total en dollars"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 0
+      - name: avg_distance
+        description: "Distance moyenne en miles"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 50
+      - name: avg_duration_min
+        description: "Durée moyenne en minutes"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 300
+      - name: avg_speed_mph
+        description: "Vitesse moyenne en mph"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 100
+
+  - name: zone_analysis
+    description: "Analyse des trajets par zone de prise en charge"
+    columns:
+      - name: pickup_location_id
+        description: "Identifiant de zone"
+        tests:
+          - not_null
+          - unique
+      - name: total_pickups
+        description: "Nombre total de prises en charge"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 1
+      - name: avg_fare
+        description: "Tarif moyen en dollars"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 0
+      - name: avg_distance
+        description: "Distance moyenne en miles"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 50
+      - name: avg_tip_rate
+        description: "Taux de pourboire moyen"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 1
+          - assert_min_value:
+              min_value: 0
+
+  - name: hourly_patterns
+    description: "Patterns horaires des trajets NYC Taxi"
+    columns:
+      - name: pickup_hour
+        description: "Heure de prise en charge (0-23)"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 23
+          - assert_min_value:
+              min_value: 0
+      - name: pickup_dow
+        description: "Jour de la semaine (0-6)"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 6
+          - assert_min_value:
+              min_value: 0
+      - name: total_trips
+        description: "Nombre total de trajets"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 1
+      - name: avg_fare
+        description: "Tarif moyen en dollars"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 0
+      - name: avg_tip_rate
+        description: "Taux de pourboire moyen"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 1
+          - assert_min_value:
+              min_value: 0
