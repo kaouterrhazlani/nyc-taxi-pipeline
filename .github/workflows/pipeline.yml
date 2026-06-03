@@ -1,38 +1,63 @@
 name: NYC Taxi Pipeline CI/CD
 
+# Déclencheurs du workflow
 on:
+  # Déclenché sur chaque push vers main ou dev
   push:
     branches:
       - main
       - dev
+  # Déclenché sur chaque Pull Request vers main ou dev
   pull_request:
     branches:
       - main
       - dev
+  # Décommentez pour activer le déclenchement automatique quotidien à 6h UTC
+  # schedule:
+  #   - cron: '0 6 * * *'  # tous les jours à 6h UTC
+  # Décommentez pour activer le déclenchement manuel depuis l'onglet Actions
+  # workflow_dispatch:
 
 jobs:
+  # ─── JOB 1 : LINT ────────────────────────────────────────────────────────────
+  # Vérifie la qualité du code Python (flake8) et SQL (sqlfluff)
+  # continue-on-error: true → un échec de lint ne bloque pas la Release
   lint:
     name: Lint
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
+      # Récupère le code du repo sur le runner
       - uses: actions/checkout@v3
 
+      # Installe Python 3.11 sur le runner
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # Installe les outils de lint
       - name: Install dependencies
         run: pip install flake8 sqlfluff
 
+      # Vérifie la syntaxe et le style Python
+      # Limite les lignes à 120 caractères
       - name: Lint Python
         run: flake8 ingestion/ --max-line-length=120
 
+      # Vérifie la syntaxe SQL pour Snowflake
+      # continue-on-error: true → les erreurs SQL n'arrêtent pas le job
       - name: Lint SQL
         run: sqlfluff lint sql/ --dialect snowflake
         continue-on-error: true
 
+  # ─── JOB 2 : DBT (désactivé) ─────────────────────────────────────────────────
+  # Désactivé car :
+  #   - Quota de minutes runner limité dans l'organisation Simplon
+  #   - Chaque collaborateur a son propre compte trial Snowflake
+  #     → le secret SNOWFLAKE_PRIVATE_KEY_B64 pointe vers un seul compte
+  #     → le check DBT échouerait pour les autres collaborateurs
+  # À réactiver quand un compte Snowflake partagé sera disponible
   # dbt:
   #   name: DBT
   #   runs-on: ubuntu-latest
@@ -53,6 +78,8 @@ jobs:
   #     - name: Install DBT
   #       run: pip install dbt-snowflake
 
+  #     # Décode la clé privée RSA depuis le secret GitHub (encodé en base64)
+  #     # et la sauvegarde dans ~/.ssh/snowflake_key.p8
   #     - name: Setup private key
   #       env:
   #         SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
@@ -61,24 +88,33 @@ jobs:
   #         echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 --decode --ignore-garbage > ~/.ssh/snowflake_key.p8
   #         chmod 600 ~/.ssh/snowflake_key.p8
 
+  #     # Exécute les modèles DBT (stg_clean_trips + tables FINAL)
   #     - name: DBT run
   #       working-directory: dbt/nyc_taxi
   #       run: dbt run
 
+  #     # Exécute les 66 tests qualité DBT (not_null, accepted_values, max/min)
   #     - name: DBT test
   #       working-directory: dbt/nyc_taxi
   #       run: dbt test
 
+  # ─── JOB 3 : RELEASE ─────────────────────────────────────────────────────────
+  # Crée une release GitHub automatiquement sur chaque push vers main
+  # Dépend du job lint (needs: [lint])
+  # Ne s'exécute que sur main et uniquement sur un push (pas sur PR)
   release:
     name: Release
     runs-on: ubuntu-latest
     needs: [lint]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
-      contents: write
+      contents: write  # nécessaire pour créer une release
     steps:
       - uses: actions/checkout@v3
 
+      # Crée une release avec le numéro de run comme version
+      # Ex: v42.0.0 pour le 42ème run du workflow
+      # generate_release_notes: true → génère automatiquement les notes depuis les commits
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
