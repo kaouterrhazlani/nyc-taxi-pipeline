@@ -1,12 +1,15 @@
 import io
 import os
+import sys
 
 import pandas as pd
 import requests
-import snowflake.connector
 import yaml
 from dotenv import load_dotenv
 from snowflake.connector.pandas_tools import write_pandas
+
+sys.path.insert(0, os.path.dirname(__file__))
+from snowflake_auth import get_snowflake_connection
 
 load_dotenv()
 
@@ -17,20 +20,13 @@ sf = config["snowflake"]
 ing = config["ingestion"]
 tech_cols = ing.get("technical_columns", [])
 
-conn = snowflake.connector.connect(
-    account=os.getenv("SNOWFLAKE_ACCOUNT"),
-    user=os.getenv("SNOWFLAKE_USER"),
-    password=os.getenv("SNOWFLAKE_PASSWORD"),
-    warehouse=sf["warehouse"],
-    database=sf["database"],
-    schema=sf["schema"],
-)
-print("connecté à snowflake")
+conn = get_snowflake_connection(config)
+print("connecte a snowflake")
 
 if ing.get("truncate_before_load", False):
     cur = conn.cursor()
     cur.execute(f"TRUNCATE TABLE IF EXISTS {sf['schema']}.{ing['table_name']}")
-    print("table vidée")
+    print("table videe")
     cur.close()
 
 table_exists = False
@@ -52,7 +48,7 @@ def add_missing_columns(conn, table_name, df):
     cur = conn.cursor()
     for col in df.columns:
         if col not in existing and col not in tech_cols:
-            print(f"  nouvelle colonne détectée : {col}")
+            print(f"  nouvelle colonne detectee : {col}")
             cur.execute(
                 f'ALTER TABLE {sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT'
             )
@@ -71,7 +67,7 @@ for fichier in fichiers:
         resp = requests.get(url, timeout=ing["timeout"])
 
         if resp.status_code == 404:
-            print("  non disponible — ignoré")
+            print("  non disponible - ignore")
             continue
         resp.raise_for_status()
 
@@ -92,10 +88,10 @@ for fichier in fichiers:
             overwrite=False,
         )
         table_exists = True
-        print(f"  {nrows:,} lignes chargées")
+        print(f"  {nrows:,} lignes chargees")
 
     except Exception as e:
         print(f"  erreur : {e}")
 
 conn.close()
-print("\nterminé")
+print("\ntermine")
