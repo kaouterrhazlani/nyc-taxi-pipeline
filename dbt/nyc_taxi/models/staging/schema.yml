@@ -1,0 +1,91 @@
+version: 2
+
+sources:
+  - name: raw
+    database: NYC_TAXI_DB
+    schema: RAW
+    tables:
+      - name: YELLOW_TAXI_TRIPS
+        description: "Données brutes NYC Taxi chargées depuis CloudFront"
+
+models:
+  - name: stg_clean_trips
+    description: "Données NYC Taxi nettoyées et enrichies — 2024 à 2026"
+    columns:
+      - name: vendor_id
+        description: "Identifiant du fournisseur TPEP (1=Creative Mobile, 2=VeriFone)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2]
+
+      - name: pickup_datetime
+        description: "Date et heure de prise en charge"
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: "Date et heure de dépose"
+        tests:
+          - not_null
+
+      - name: passenger_count
+        description: "Nombre de passagers"
+        tests:
+          - not_null
+
+      - name: trip_distance
+        description: "Distance du trajet en miles"
+        tests:
+          - not_null
+
+      - name: fare_amount
+        description: "Montant de la course en dollars"
+        tests:
+          - not_null
+
+      - name: payment_type
+        description: "Mode de paiement (1=CB, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6]
+
+      - name: pickup_location_id
+        description: "Identifiant de zone de prise en charge"
+        tests:
+          - not_null
+
+      - name: dropoff_location_id
+        description: "Identifiant de zone de dépose"
+        tests:
+          - not_null
+
+      - name: trip_duration_min
+        description: "Durée du trajet en minutes"
+        tests:
+          - not_null
+
+      - name: distance_category
+        description: "Catégorie de distance (short/medium/long/very_long)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['short', 'medium', 'long', 'very_long']
+
+      - name: time_period
+        description: "Période temporelle (morning_rush/evening_rush/night/daytime)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['morning_rush', 'evening_rush', 'night', 'daytime']
+
+      - name: source_file
+        description: "Nom du fichier Parquet source"
+        tests:
+          - not_null
+
+      - name: pickup_date
+        description: "Date de prise en charge"
+        tests:
+          - not_null
