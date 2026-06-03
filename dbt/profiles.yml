@@ -1,0 +1,16 @@
+# Connexion DBT -> Snowflake.
+# Les identifiants viennent des variables d'environnement (mêmes clés que .env),
+# donc AUCUN secret n'est écrit ici : ce fichier est commitable sans risque.
+nyc_taxi:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'ACCOUNTADMIN') }}"
+      database: NYC_TAXI_DB
+      warehouse: NYC_TAXI_WH
+      schema: PUBLIC          # schéma par défaut ; surchargé par +schema (STAGING/FINAL)
+      threads: 4

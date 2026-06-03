@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: daily_summary
+    description: "Résumé journalier (couche FINAL) : nb trajets, revenu, ticket moyen, distance, durée."
+    columns:
+      - name: pickup_date
+        description: "Jour de prise en charge."
+        tests:
+          - not_null
+          - unique          # une seule ligne par jour
+      - name: nb_trajets
+        tests:
+          - not_null

@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_yellow_taxi
+    description: "Trajets nettoyés et enrichis (couche STAGING)."
+    columns:
+      - name: pickup_datetime
+        description: "Date/heure de prise en charge."
+        tests:
+          - not_null
+      - name: dropoff_datetime
+        description: "Date/heure de dépose."
+        tests:
+          - not_null
+      - name: total_amount
+        description: "Montant total du trajet."
+        tests:
+          - not_null
+      - name: trip_distance
+        description: "Distance en miles."
+        tests:
+          - not_null
+      - name: payment_type
+        description: "Type de paiement (1=CB, 2=espèces, 3=gratuit, 4=litige, 5=inconnu, 6=annulé)."
+        tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6]
+                quote: false
+              config:
+                severity: warn   # avertissement seulement : ne casse pas le run

@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    database: NYC_TAXI_DB
+    schema: RAW
+    tables:
+      - name: yellow_taxi_trips
+        identifier: YELLOW_TAXI_TRIPS
+        description: "Trajets bruts chargés depuis les Parquet NYC TLC (couche RAW)."

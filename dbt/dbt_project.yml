@@ -1,0 +1,24 @@
+name: 'nyc_taxi'
+version: '1.0.0'
+config-version: 2
+
+# Profil de connexion (défini dans profiles.yml)
+profile: 'nyc_taxi'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+# Dossiers générés par DBT (ignorés par git)
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  nyc_taxi:
+    staging:
+      +materialized: view      # les modèles de staging sont des vues (rapides à construire)
+      +schema: STAGING
+    marts:
+      +materialized: table     # les tables analytiques sont matérialisées
+      +schema: FINAL
