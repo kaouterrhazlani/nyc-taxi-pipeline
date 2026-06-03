@@ -71,7 +71,7 @@ for fichier in fichiers:
         resp = requests.get(url, timeout=ing["timeout"])
 
         if resp.status_code == 404:
-            print(f"  non disponible — ignoré")
+            print("  non disponible — ignoré")
             continue
         resp.raise_for_status()
 
