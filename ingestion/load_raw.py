@@ -54,9 +54,8 @@ def add_missing_columns(conn, table_name, df):
         if col not in existing and col not in tech_cols:
             print(f"  nouvelle colonne détectée : {col}")
             cur.execute(
-                f'ALTER TABLE {
-                    sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT')
-
+                f'ALTER TABLE {sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT'
+            )
 
 fichiers = []
 for annee in ing["annees"]:
