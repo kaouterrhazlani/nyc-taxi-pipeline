@@ -14,3 +14,4 @@ ingestion:
     - 2024
     - 2025
     - 2026
+  truncate_before_ingestion: true  #attention : cette option supprimera toutes les données existantes dans la table avant d'ingérer les nouvelles données. Utilisez avec précaution.
