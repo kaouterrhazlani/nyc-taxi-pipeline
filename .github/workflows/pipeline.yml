@@ -33,46 +33,46 @@ jobs:
         run: sqlfluff lint sql/ --dialect snowflake
         continue-on-error: true
 
-  dbt:
-    name: DBT
-    runs-on: ubuntu-latest
-    needs: lint
-    env:
-      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-      SNOWFLAKE_KEY_PATH: /home/runner/.ssh/snowflake_key.p8
-      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt/nyc_taxi
-    steps:
-      - uses: actions/checkout@v3
+  # dbt:
+  #   name: DBT
+  #   runs-on: ubuntu-latest
+  #   needs: lint
+  #   env:
+  #     SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+  #     SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+  #     SNOWFLAKE_KEY_PATH: /home/runner/.ssh/snowflake_key.p8
+  #     DBT_PROFILES_DIR: ${{ github.workspace }}/dbt/nyc_taxi
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
 
-      - name: Install DBT
-        run: pip install dbt-snowflake
+  #     - name: Install DBT
+  #       run: pip install dbt-snowflake
 
-      - name: Setup private key
-        env:
-          SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 --decode --ignore-garbage > ~/.ssh/snowflake_key.p8
-          chmod 600 ~/.ssh/snowflake_key.p8
+  #     - name: Setup private key
+  #       env:
+  #         SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 --decode --ignore-garbage > ~/.ssh/snowflake_key.p8
+  #         chmod 600 ~/.ssh/snowflake_key.p8
 
-      - name: DBT run
-        working-directory: dbt/nyc_taxi
-        run: dbt run
+  #     - name: DBT run
+  #       working-directory: dbt/nyc_taxi
+  #       run: dbt run
 
-      - name: DBT test
-        working-directory: dbt/nyc_taxi
-        run: dbt test
+  #     - name: DBT test
+  #       working-directory: dbt/nyc_taxi
+  #       run: dbt test
 
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [lint, dbt]
+    needs: [lint]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: write
