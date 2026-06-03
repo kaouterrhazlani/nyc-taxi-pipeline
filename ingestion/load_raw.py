@@ -2,13 +2,13 @@ import io
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(__file__))
+
 import pandas as pd
 import requests
 import yaml
 from dotenv import load_dotenv
 from snowflake.connector.pandas_tools import write_pandas
-
-sys.path.insert(0, os.path.dirname(__file__))
 from snowflake_auth import get_snowflake_connection
 
 load_dotenv()
