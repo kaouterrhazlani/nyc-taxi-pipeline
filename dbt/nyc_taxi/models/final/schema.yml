@@ -41,8 +41,20 @@ models:
               max_value: 100
 
   - name: zone_analysis
-    description: "Analyse des trajets par zone de prise en charge"
+    description: "Analyse des trajets par zone de prise en charge enrichie avec noms TLC"
     columns:
+      - name: borough
+        description: "Borough NYC (Manhattan, Brooklyn, Queens, Bronx, Staten Island)"
+        tests:
+          - not_null
+      - name: zone_name
+        description: "Nom de la zone TLC"
+        tests:
+          - not_null
+      - name: service_zone
+        description: "Type de zone (Yellow Zone, Boro Zone, Airports, EWR)"
+        tests:
+          - not_null
       - name: pickup_location_id
         description: "Identifiant de zone"
         tests:

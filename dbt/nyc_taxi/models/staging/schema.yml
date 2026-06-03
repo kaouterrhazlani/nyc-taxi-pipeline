@@ -7,6 +7,8 @@ sources:
     tables:
       - name: YELLOW_TAXI_TRIPS
         description: "Données brutes NYC Taxi chargées depuis CloudFront"
+      - name: TAXI_ZONES
+        description: "Table de référence des 265 zones TLC NYC"
 
 models:
   - name: stg_clean_trips
