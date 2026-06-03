@@ -218,6 +218,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # DBT
-dbt/target/
-dbt/dbt_packages/
-dbt/logs/
+dbt/nyc_taxi/target/
+dbt/nyc_taxi/dbt_packages/
+dbt/nyc_taxi/logs/
+dbt/nyc_taxi/.user.yml

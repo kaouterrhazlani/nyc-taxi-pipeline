@@ -1,0 +1,14 @@
+nyc_taxi:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      role: ACCOUNTADMIN
+      warehouse: NYC_TAXI_WH
+      database: NYC_TAXI_DB
+      schema: STAGING
+      threads: 4
+      private_key_path: "{{ env_var('SNOWFLAKE_KEY_PATH') }}"
+      authenticator: snowflake_jwt
