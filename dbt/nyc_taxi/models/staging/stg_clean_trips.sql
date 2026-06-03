@@ -64,9 +64,10 @@ FROM {{ source('raw', 'YELLOW_TAXI_TRIPS') }}
 WHERE
     "fare_amount" > 0
     AND "trip_distance" > 0
-    AND "trip_distance" < 200
+    AND "trip_distance" < 50
     AND "passenger_count" > 0
     AND "passenger_count" <= 6
+    AND "tip_amount" / "fare_amount" <= 1
     AND TO_TIMESTAMP("tpep_pickup_datetime" / 1000000) >= '2024-01-01'
     AND TO_TIMESTAMP("tpep_pickup_datetime" / 1000000) < '2027-01-01'
     AND DATEDIFF('minute',
@@ -75,3 +76,8 @@ WHERE
     AND DATEDIFF('minute',
         TO_TIMESTAMP("tpep_pickup_datetime" / 1000000),
         TO_TIMESTAMP("tpep_dropoff_datetime" / 1000000)) < 300
+    AND "trip_distance" / (
+    DATEDIFF('minute',
+        TO_TIMESTAMP("tpep_pickup_datetime" / 1000000),
+        TO_TIMESTAMP("tpep_dropoff_datetime" / 1000000)
+    ) / 60.0) <= 100
