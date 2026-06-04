@@ -1,57 +1,94 @@
-import snowflake.connector
-from snowflake.connector.pandas_tools import write_pandas
-import requests
-import pandas as pd
 import io
-import os
+
+import pandas as pd
+import requests
+import yaml
 from dotenv import load_dotenv
+from snowflake.connector.pandas_tools import write_pandas
+
+from ingestion.snowflake_auth import get_snowflake_connection
 
 load_dotenv()
 
-# Connexion Snowflake
-conn = snowflake.connector.connect(
-    account=os.getenv("SNOWFLAKE_ACCOUNT"),
-    user=os.getenv("SNOWFLAKE_USER"),
-    password=os.getenv("SNOWFLAKE_PASSWORD"),
-    warehouse="NYC_TAXI_WH",
-    database="NYC_TAXI_DB",
-    schema="RAW"
-)
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
 
-print("Connexion Snowflake OK")
+sf = config["snowflake"]
+ing = config["ingestion"]
+tech_cols = ing.get("technical_columns", [])
 
-# Liste des fichiers à charger
-fichiers = [
-    f"yellow_tripdata_2024-{str(m).zfill(2)}.parquet"
-    for m in range(1, 13)
-] + [
-    "yellow_tripdata_2025-01.parquet",
-    "yellow_tripdata_2025-02.parquet"
-]
+conn = get_snowflake_connection(config)
+print("connecte a snowflake")
 
-BASE_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
+if ing.get("truncate_before_load", False):
+    cur = conn.cursor()
+    cur.execute(f"TRUNCATE TABLE IF EXISTS {sf['schema']}.{ing['table_name']}")
+    print("table videe")
+    cur.close()
+
+table_exists = False
+
+
+def get_existing_columns(conn, table_name):
+    try:
+        cur = conn.cursor()
+        cur.execute(f"SHOW COLUMNS IN TABLE {sf['schema']}.{table_name}")
+        return [row[2] for row in cur.fetchall()]
+    except Exception:
+        return []
+
+
+def add_missing_columns(conn, table_name, df):
+    existing = get_existing_columns(conn, table_name)
+    if not existing:
+        return
+    cur = conn.cursor()
+    for col in df.columns:
+        if col not in existing and col not in tech_cols:
+            print(f"  nouvelle colonne detectee : {col}")
+            cur.execute(
+                f'ALTER TABLE {sf["schema"]}.{table_name} ADD COLUMN "{col}" FLOAT'
+            )
+
+
+fichiers = []
+for annee in ing["annees"]:
+    for mois in range(1, 13):
+        fichiers.append(
+            f"yellow_tripdata_{annee}-{str(mois).zfill(2)}.parquet")
 
 for fichier in fichiers:
-    print(f"\nChargement : {fichier}")
+    print(f"\n{fichier}")
     try:
-        url = f"{BASE_URL}/{fichier}"
-        response = requests.get(url, timeout=120)
-        response.raise_for_status()
+        url = f"{ing['base_url']}/{fichier}"
+        resp = requests.get(url, timeout=ing["timeout"])
 
-        df = pd.read_parquet(io.BytesIO(response.content))
-        print(f"  Lignes lues : {len(df):,}")
+        if resp.status_code == 404:
+            print("  non disponible - ignore")
+            continue
+        resp.raise_for_status()
 
-        success, nchunks, nrows, _ = write_pandas(
+        df = pd.read_parquet(io.BytesIO(resp.content))
+        print(f"  {len(df):,} lignes lues")
+
+        df[tech_cols[0]] = fichier
+        df[tech_cols[1]] = pd.Timestamp.now()
+
+        if table_exists:
+            add_missing_columns(conn, ing["table_name"], df)
+
+        _, _, nrows, _ = write_pandas(
             conn,
             df,
-            "YELLOW_TAXI_TRIPS",
+            ing["table_name"],
             auto_create_table=True,
-            overwrite=False
+            overwrite=False,
         )
-        print(f"  Lignes chargées : {nrows:,} ✅")
+        table_exists = True
+        print(f"  {nrows:,} lignes chargees")
 
     except Exception as e:
-        print(f"  Erreur : {e} ❌")
+        print(f"  erreur : {e}")
 
 conn.close()
-print("\nIngestion terminée !")
+print("\ntermine")

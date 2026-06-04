@@ -1,0 +1,123 @@
+version: 2
+
+sources:
+  - name: raw
+    database: NYC_TAXI_DB
+    schema: RAW
+    tables:
+      - name: YELLOW_TAXI_TRIPS
+        description: "Données brutes NYC Taxi chargées depuis CloudFront"
+      - name: TAXI_ZONES
+        description: "Table de référence des 265 zones TLC NYC"
+
+models:
+  - name: stg_clean_trips
+    description: "Données NYC Taxi nettoyées et enrichies — 2024 à 2026 — distance filtrée < 50 miles"
+    columns:
+      - name: vendor_id
+        description: "Identifiant du fournisseur TPEP (1=Creative Mobile, 2=VeriFone)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2]
+
+      - name: pickup_datetime
+        description: "Date et heure de prise en charge"
+        tests:
+          - not_null
+
+      - name: dropoff_datetime
+        description: "Date et heure de dépose"
+        tests:
+          - not_null
+
+      - name: passenger_count
+        description: "Nombre de passagers (1-6)"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 6
+          - assert_min_value:
+              min_value: 1
+
+      - name: trip_distance
+        description: "Distance du trajet en miles — filtrée entre 0 et 50 miles"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 50
+          - assert_min_value:
+              min_value: 0
+
+      - name: fare_amount
+        description: "Montant de la course en dollars"
+        tests:
+          - not_null
+          - assert_min_value:
+              min_value: 0
+
+      - name: payment_type
+        description: "Mode de paiement (1=CB, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6]
+
+      - name: pickup_location_id
+        description: "Identifiant de zone de prise en charge"
+        tests:
+          - not_null
+
+      - name: dropoff_location_id
+        description: "Identifiant de zone de dépose"
+        tests:
+          - not_null
+
+      - name: trip_duration_min
+        description: "Durée du trajet en minutes (1-299)"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 300
+          - assert_min_value:
+              min_value: 1
+
+      - name: avg_speed_mph
+        description: "Vitesse moyenne en mph — max 100 mph"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 100
+
+      - name: tip_rate
+        description: "Taux de pourboire (0-1)"
+        tests:
+          - not_null
+          - assert_max_value:
+              max_value: 1
+          - assert_min_value:
+              min_value: 0
+
+      - name: distance_category
+        description: "Catégorie de distance (short/medium/long/very_long)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['short', 'medium', 'long', 'very_long']
+
+      - name: time_period
+        description: "Période temporelle (morning_rush/evening_rush/night/daytime)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['morning_rush', 'evening_rush', 'night', 'daytime']
+
+      - name: source_file
+        description: "Nom du fichier Parquet source"
+        tests:
+          - not_null
+
+      - name: pickup_date
+        description: "Date de prise en charge"
+        tests:
+          - not_null
