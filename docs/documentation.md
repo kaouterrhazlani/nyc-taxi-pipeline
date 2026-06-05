@@ -568,6 +568,47 @@ dbt/nyc_taxi/
     └── generate_schema_name.sql   # Surcharge nommage schéma dbt
 ```
 
+### Documentation dbt auto-générée
+
+dbt génère automatiquement une documentation interactive du pipeline à partir du code SQL et des `schema.yml`.
+
+```bash
+cd dbt/nyc_taxi
+dbt docs generate   # Génère les fichiers dans target/
+dbt docs serve      # Lance l'interface web → http://localhost:8080
+```
+
+**Fichiers générés dans `dbt/nyc_taxi/target/` :**
+
+```
+target/
+├── catalog.json       # Structure des tables Snowflake (colonnes, types, statistiques)
+├── manifest.json      # Graphe complet du projet (modèles, tests, sources, dépendances)
+├── run_results.json   # Résultats du dernier dbt run + dbt test
+└── index.html         # Interface web interactive
+```
+
+> Le dossier `target/` est dans `.gitignore` — les fichiers se regénèrent à chaque `dbt docs generate`.
+
+**L'interface web expose :**
+- **Lineage graph interactif** — visualisation RAW → STAGING → FINAL avec les dépendances `source()` / `ref()`
+- **Sources** : `raw.YELLOW_TAXI_TRIPS` et `raw.TAXI_ZONES` avec toutes les colonnes TLC
+- **Modèles** : `stg_clean_trips`, `daily_summary`, `zone_analysis`, `hourly_patterns`
+- **Tests** : `test_assert_max_value`, `test_assert_min_value` avec les seuils configurés
+- **Macros** : `generate_schema_name`
+- **SQL compilé** de chaque modèle avec les colonnes réelles Snowflake
+
+**Exemple — source `raw.YELLOW_TAXI_TRIPS` visible dans l'interface :**
+```sql
+select VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
+       passenger_count, trip_distance, RatecodeID, store_and_fwd_flag,
+       PULocationID, DOLocationID, payment_type, fare_amount,
+       extra, mta_tax, tip_amount, tolls_amount, improvement_surcharge,
+       total_amount, congestion_surcharge, Airport_fee,
+       _source_file, _ingestion_date, cbd_congestion_fee
+from NYC_TAXI_DB.RAW.YELLOW_TAXI_TRIPS
+```
+
 ---
 
 ## 11. CI/CD GitHub Actions
