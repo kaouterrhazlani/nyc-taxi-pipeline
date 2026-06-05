@@ -69,8 +69,11 @@ Les taxis jaunes de New York City génèrent des millions de trajets chaque mois
 Les trois membres ont contribué à l'ensemble des étapes du projet : ingestion des données brutes, nettoyage et staging, transformations dbt, et visualisation du dashboard.
 
 **Programme :** Simplon Data Engineering P1-2025
+
 **Durée du sprint :** 3 jours
+
 **Kanban projet :** https://github.com/orgs/Simplon-DE-P1-2025/projects/33
+
 **Repo Simplon :** [Simplon-DE-P1-2025/nyc-taxi-pipeline-MarvelousSamurai](https://github.com/Simplon-DE-P1-2025/nyc-taxi-pipeline-MarvelousSamurai)
 
 ---
@@ -104,11 +107,11 @@ Les trois membres ont contribué à l'ensemble des étapes du projet : ingestion
 └──────────────────────────────┬──────────────────────────────────────────┘
                                │
                     ┌──────────▼──────────┐
-                    │ Streamlit Dashboard │
-                    │ (app.py)            │
+                    │ Streamlit /Power BI │
+                    │     Dashboards      │
                     └─────────────────────┘
 ```
-
+![ARchitecture Pipline](./img/archi_pipeline.png)
 ---
 
 ## 4. Stack techniques
@@ -183,6 +186,8 @@ refactor: Refactoring sans changement fonctionnel
 
 Chaque membre a créé son propre compte **Snowflake Trial** (comptes séparés, $400 crédits, 30 jours).
 Le setup SQL inclut aussi la création d'utilisateurs/rôles pour un éventuel compte partagé (objectif : réactiver le job dbt en CI — voir [section 11](#11-cicd-github-actions)).
+
+![Catalog snowflake](./img/snowflake_horizon_catalog.png)
 
 ### Setup complet Snowflake
 
@@ -691,10 +696,90 @@ streamlit run dashboard/app.py
 
 Tableaux de bord construits sur les tables `FINAL` (connexion directe Snowflake).
 
-**3 pages :**
-- **Vue Générale** — KPIs globaux, slicers Année/Mois/Jour/Quarter, heatmap jour × heure
-- **Analyse Zones** — Top 20 zones, map bulles, scatter Distance vs Tarif, revenue par borough
-- **Business Insights** — efficacité transport (vitesse par année), combo chart revenue + tip_rate
+**Page 1 — Vue Générale**
+![Vue Générale](./img/power_bi_page1.png)
+Objectif : Vue d'ensemble du pipeline sur la période 2024-2026 avec filtres temporels interactifs.
+
+Slicers :
+- Année
+- Quarter
+- Mois
+- Jour  
+Filtres croisés sur tous les visuels de la page
+
+KPIs (cartes) :
+- Total Trajets — nombre total de trajets nettoyés (80,97M)
+- Revenu Total — somme des montants facturés ($2,35Md)
+- Vitesse Moyenne (mph) — vitesse moyenne calculée dans STAGING
+- Distance Moyenne (mi) — distance moyenne en miles (standard TLC)
+
+Revenus & Trajets par temps (Line chart double axe) :
+- Axe Y gauche : TOTAL_REVENUE
+- Axe Y droit : TOTAL_TRIPS
+- Axe X : PICKUP_DATE  
+Permet de visualiser la corrélation revenus / volume sur la période
+
+Trajets par Heure (Bar chart) :
+- Axe X : PICKUP_HOUR (0-23)
+- Axe Y : TOTAL_TRIPS  
+Montre les pics de demande :
+- Rush matin (8h–9h)
+- Rush soir (17h–19h)
+
+Trajets par Heure et Jour de Semaine (Line chart) :
+- Axe X : PICKUP_HOUR
+- Légende : Jour_Semaine (colonne DAX calculée)  
+Montre les patterns horaires par jour  
+Exemple : vendredi = jour le plus actif
+
+Heatmap (matrice) :
+- Lignes : Jour_Semaine
+- Colonnes : PICKUP_HOUR
+- Valeurs : TOTAL_TRIPS  
+Permet d’identifier les créneaux les plus chargés
+
+
+**Page 2 — Analyse Géographique — Zones & Arrondissements**
+![Analyse Géographique](./img/power_bi_page2.png)
+Objectif : Analyse spatiale de l'activité taxi par zone et arrondissement NYC.
+
+Top 20 Zones — Départ taxi (Bar chart horizontal) :
+- Axe Y : ZONE_NAME
+- Axe X : TOTAL_PICKUPS  
+JFK Airport et Upper East Side South = zones les plus actives
+
+Distance vs Tarif (Scatter plot) :
+- Axe X : AVG_DISTANCE
+- Axe Y : AVG_FARE
+- Taille bulles : TOTAL_PICKUPS  
+Montre la corrélation distance / tarif  
+Exemple : EWR (Newark) = tarif le plus élevé
+
+Carte des départs (Azure map) :
+- Localisation : coordonnées zones TLC NYC
+- Taille bulles : TOTAL_PICKUPS  
+Forte concentration sur Manhattan
+
+Tarif moyen par arrondissement (Line chart) :
+- Axe X : BOROUGH
+- Axe Y : AVG_FARE  
+Classement :
+EWR > Staten Island > Queens > Bronx > Brooklyn > Manhattan
+
+
+Page 3 — Business Insights
+
+Objectif : Analyse de l'efficacité transport et des tendances business sur la période.
+
+Efficacité transport (Line chart) :
+- Axe X : Année
+- Axe Y : AVG_SPEED_MPH  
+Tendance baissière de la vitesse moyenne sur 2024–2026
+
+Combo chart Revenue + Tip Rate :
+- Barres : TOTAL_REVENUE par année
+- Ligne : AVG_TIP_RATE  
+Montre l’évolution du revenu et du taux de pourboire
 
 ---
 
